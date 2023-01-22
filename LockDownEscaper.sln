@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LDEInjector", "LDEInjector\LDEInjector.vcxproj", "{4C8706C3-F38F-429A-B94A-5E8B9FA235A0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LDEDLL", "LDEDLL\LDEDLL.vcxproj", "{7CA1EF80-D322-4BB5-B994-894AE48A65E1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4C8706C3-F38F-429A-B94A-5E8B9FA235A0}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{4C8706C3-F38F-429A-B94A-5E8B9FA235A0}.Debug|Any CPU.Build.0 = Debug|Win32
+		{4C8706C3-F38F-429A-B94A-5E8B9FA235A0}.Release|Any CPU.ActiveCfg = Release|Win32
+		{4C8706C3-F38F-429A-B94A-5E8B9FA235A0}.Release|Any CPU.Build.0 = Release|Win32
+		{7CA1EF80-D322-4BB5-B994-894AE48A65E1}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{7CA1EF80-D322-4BB5-B994-894AE48A65E1}.Debug|Any CPU.Build.0 = Debug|Win32
+		{7CA1EF80-D322-4BB5-B994-894AE48A65E1}.Release|Any CPU.ActiveCfg = Release|Win32
+		{7CA1EF80-D322-4BB5-B994-894AE48A65E1}.Release|Any CPU.Build.0 = Release|Win32
+	EndGlobalSection
+EndGlobal
