@@ -6,3 +6,17 @@ LockDownEscaper.sln.DotSettings.user
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+
+# Default ignored files
+/shelf/
+/workspace.xml
+# Rider ignored files
+/.idea.LockDownEscaper.iml
+/modules.xml
+/projectSettingsUpdater.xml
+/contentModel.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
