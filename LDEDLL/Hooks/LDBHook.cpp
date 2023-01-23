@@ -36,7 +36,6 @@ NTSTATUS WINAPI nt_query_system_information(SYSTEM_INFORMATION_CLASS SystemInfor
             current = PSYSTEM_PROCESS_INFORMATION((PUCHAR)current + current->NextEntryOffset);
         }
 
-        //LOG_F(WARNING, "Hid %u processes", count);
         //std::cout << "[f][LDBdll][LDEscaper]: Hid " << count << " processes" << std::endl;
     }
 
@@ -48,7 +47,6 @@ extern int _cdecl ldeDoSomeStuff(int* a1)
     ldeio.writeLog("CLDBDoSomeStuff has been called!", LOG_WARNING);
     if (*a1 >> 6 & 1)
     {
-        // todo check if this actually matters
         auto v1 = 1024;
         v1 += 2048;
         auto v6 = v1 + 2048;
@@ -62,7 +60,6 @@ extern int _cdecl ldeDoSomeStuff(int* a1)
 extern bool _cdecl ldeDoSomeOtherStuff(int* a1)
 {
     ldeio.writeLog("CLDBDoSomeOtherStuff has been called!", LOG_WARNING);
-    // todo check if this actually matters
     *a1 += 2048;
     return TRUE;
 }
@@ -75,72 +72,7 @@ extern bool _cdecl ldeDoYetMoreStuff()
 
 extern int _cdecl ldeDoSomeOtherStuffS(int* a1)
 {
-    // todo emulate dll calls to calculate proper ret value.
     return 1024 + 4096 + 2048;
-}
-
-LSTATUS ldeDisableTaskManager(void* a1)
-{
-    std::cout << "[f][LDBdll][LDEscaper]: Block call to disable task manager!" << std::endl;
-    return ERROR_SUCCESS;
-}
-
-BOOL ldeEmptyClipboard()
-{
-    std::cout << "[f][LDBdll][LDEscaper]: Block call to empty clipboard!" << std::endl;
-    return TRUE;
-}
-
-void ldeLockdownLog(const char* a1, const char* a2)
-{
-    struct _SYSTEMTIME SystemTime{};
-    char msg[16368];
-    va_list va;
-
-    va_start(va, a1);
-    GetLocalTime(&SystemTime);
-    sprintf_s(static_cast<char*>(msg), 256, "%02d:%02d:%02d.%03d - ", SystemTime.wHour, SystemTime.wMinute,
-              SystemTime.wSecond, SystemTime.wMilliseconds);
-    const auto v1 = strlen(msg);
-    _vsprintf_s_l(&msg[v1], 16368 - v1, a1, nullptr, va);
-
-    printf("[LOCKDOWN] %s\n", msg);
-    va_end(va);
-}
-
-BOOL ldeCheckForegroundWindow()
-{
-    _asm
-    {
-        push 0
-        call GetModuleHandleW
-        mov eax, [eax + 0x124DC8]
-        inc dword ptr[eax + 0x8FA8]
-    }
-    return TRUE;
-}
-
-int ldeCheckVM()
-{
-    _asm
-    {
-        push 0
-        call GetModuleHandleW
-        mov eax, [eax + 0x124DC8]
-        inc dword ptr [eax + 0x8FA4]
-    }
-	
-    return FALSE;
-}
-
-LRESULT WINAPI ldeWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    if (uMsg == WM_SETFOCUS || uMsg == WM_ACTIVATEAPP || uMsg == 0x2B1)
-    {
-        ldeio.writeLog("Blocked call to set focus.", LOG_WARNING);
-        return 0;
-    }
-    return ogWndProc(hWnd, uMsg, wParam, lParam);
 }
 
 BOOL LDBHook::attachHooks()
@@ -176,11 +108,6 @@ BOOL LDBHook::detachHooks()
     DetourDetach(&reinterpret_cast<PVOID&>(og_do_yet_more_stuff), ldeDoYetMoreStuff);
     DetourDetach(&reinterpret_cast<PVOID&>(og_do_some_other_stuff_s), ldeDoSomeOtherStuffS);
     DetourDetach(&reinterpret_cast<PVOID&>(og_nt_query_system_information), nt_query_system_information);
-    //DetourDetach(&reinterpret_cast<PVOID&>(og_disable_task_manager), ldeDisableTaskManager);
-    //DetourDetach(&reinterpret_cast<PVOID&>(og_wnd_proc), ldeWindProc);
-    //DetourDetach(&reinterpret_cast<PVOID&>(og_lockdown_log), ldeLockdownLog);
-    //DetourDetach(&reinterpret_cast<PVOID&>(og_check_foreground_window), ldeCheckForegroundWindow);
-    //DetourDetach(&reinterpret_cast<PVOID&>(og_check_vm), ldeCheckVM);
     return TRUE;
 }
 

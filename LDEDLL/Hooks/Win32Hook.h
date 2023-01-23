@@ -40,12 +40,13 @@ public:
     
     //Keyboard Hooks
     inline static SHORT (WINAPI *ogGetAsyncKeyState)(int vKey) = GetAsyncKeyState;
+    inline static BOOL (WINAPI *ogEmptyClipboard)() = EmptyClipboard;
     //Detection hooks
     inline static HHOOK(WINAPI *ogSetWindowsHookExA)(int idHook, HOOKPROC lpfn, HINSTANCE hmod, DWORD dwThreadId) = SetWindowsHookExA;
     inline static HANDLE (WINAPI *ogCreateFileA)(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) = CreateFileA;
     inline static HANDLE (WINAPI *ogCreateFileW)(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) = CreateFileW;
     inline static VOID (WINAPI *ogGetSystemInfo)(LPSYSTEM_INFO lpSystemInfo) = GetSystemInfo;
-    
+    inline static HWINEVENTHOOK (WINAPI *ogSetWinEventHook)(DWORD eventMin, DWORD eventMax, HMODULE hmodWinEventProc, WINEVENTPROC lpfnWinEventProc, DWORD idProcess, DWORD idThread, DWORD dwFlags) = SetWinEventHook;
     inline static BOOL (WINAPI *ogGetVersionExW)(LPOSVERSIONINFOW lpVersionInformation) = GetVersionExW;
     //Registry Hooks
     inline static LONG (WINAPI *ogRegSetValueExA)(HKEY hKey, LPCSTR lpValueName, DWORD Reserved, DWORD dwType, const BYTE *lpData, DWORD cbData) = RegSetValueExA;

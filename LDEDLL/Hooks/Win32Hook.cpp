@@ -94,26 +94,30 @@ BOOL CALLBACK ldeEnumWindowsProc(HWND hwnd, LPARAM lParam) {
     return TRUE;
 }
 
-HWND WINAPI ldeGetForegroundWindow() {
-    HWND hWnd = Win32Hook::ogGetForegroundWindow();
-    DWORD dwProcessId;
-    GetWindowThreadProcessId(hWnd, &dwProcessId);
-    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwProcessId);
-    if (hProcess == NULL) {
-        return hWnd;
+HWND FindMyTopMostWindow()
+{
+    DWORD dwProcID = GetCurrentProcessId();
+    HWND hWnd = GetTopWindow(GetDesktopWindow());
+    while(hWnd)
+    {
+        DWORD dwWndProcID = 0;
+        GetWindowThreadProcessId(hWnd, &dwWndProcID);
+        if(dwWndProcID == dwProcID)
+            return hWnd;            
+        hWnd = GetNextWindow(hWnd, GW_HWNDNEXT);
     }
-    HWND hParentWnd = NULL;
-    EnumWindows(ldeEnumWindowsProc, (LPARAM)&hParentWnd);
-    CloseHandle(hProcess);
-    
-    ldeio.writeLog("GetForegroundWindow called, will return parent process.", LOG_INFO);
-    return hParentWnd;
+    return NULL;
+}
+
+HWND WINAPI ldeGetForegroundWindow() {
+    ldeio.writeLog("GetActiveWindow called, will return top most window.", LOG_INFO);
+    return FindMyTopMostWindow();
 }
 
 HWND WINAPI ldeSetActiveWindow(HWND hWnd)
 {
-    ldeio.writeLog("SetActiveWindow called, will return NULL.", LOG_INFO);
-    return NULL;
+    ldeio.writeLog("SetActiveWindow called, will return top most window.", LOG_INFO);
+    return FindMyTopMostWindow();
 }
 
 BOOL WINAPI ldeShowWindow(HWND hWnd, int nCmdShow) {
@@ -160,6 +164,12 @@ SHORT WINAPI ldeGetAsyncKeyState(int vKey)
 {
     ldeio.writeLog("GetAsyncKeyState called, will return NULL.", LOG_INFO);
     return NULL;
+}
+
+BOOL WINAPI ldeEmptyClipboard()
+{
+    ldeio.writeLog("EmptyClipboard called, will return ERROR_SUCCESS.", LOG_INFO);
+    return ERROR_SUCCESS;
 }
 
 /*
@@ -216,6 +226,12 @@ BOOL WINAPI ldeGetVersionExW(LPOSVERSIONINFOW lpVersionInformation) {
     return TRUE;
 }
 
+HWINEVENTHOOK WINAPI ldeSetWinEventHook(DWORD eventMin, DWORD eventMax, HMODULE hmodWinEventProc, WINEVENTPROC lpfnWinEventProc, DWORD idProcess, DWORD idThread, DWORD dwFlags)
+{
+    ldeio.writeLog("SetWinEventHook called, will return NULL.", LOG_INFO);
+    return NULL;
+}
+
 /*
  *
  *  Win32 Registry Hooks
@@ -268,6 +284,8 @@ BOOL Win32Hook::attachHooks()
     DetourAttach(&reinterpret_cast<PVOID&>(ogCreateFileW), ldeCreateFileW);
     DetourAttach(&reinterpret_cast<PVOID&>(ogGetSystemInfo), ldeGetSystemInfo);
     DetourAttach(&reinterpret_cast<PVOID&>(ogGetVersionExW), ldeGetVersionExW);
+    DetourAttach(&reinterpret_cast<PVOID&>(ogSetWinEventHook), ldeSetWinEventHook);
+    DetourAttach(&reinterpret_cast<PVOID&>(ogEmptyClipboard), ldeEmptyClipboard);
     ldeio.writeLog("Finished hooking WIN32 API functions!", LOG_SUCCESS);
     return TRUE;
 }
@@ -297,5 +315,7 @@ BOOL Win32Hook::detachHooks()
     DetourDetach(&reinterpret_cast<PVOID&>(ogCreateFileW), ldeCreateFileW);
     DetourDetach(&reinterpret_cast<PVOID&>(ogGetSystemInfo), ldeGetSystemInfo);
     DetourDetach(&reinterpret_cast<PVOID&>(ogGetVersionExW), ldeGetVersionExW);
+    DetourDetach(&reinterpret_cast<PVOID&>(ogSetWinEventHook), ldeSetWinEventHook);
+    DetourDetach(&reinterpret_cast<PVOID&>(ogEmptyClipboard), ldeEmptyClipboard);
     return TRUE;
 }
