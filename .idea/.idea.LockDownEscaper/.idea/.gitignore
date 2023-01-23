@@ -1,4 +1,13 @@
-﻿# Default ignored files
+﻿bin/
+obj/
+Debug/
+.idea/
+LockDownEscaper.sln.DotSettings.user
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+
+# Default ignored files
 /shelf/
 /workspace.xml
 # Rider ignored files
