@@ -4,7 +4,7 @@
 #include <detours.h>
 #include <WinUser.h>
 #include <tchar.h>
-
+#pragma warning (disable : 4996)
 class Win32Hook
 {
 
@@ -42,6 +42,11 @@ public:
     inline static SHORT (WINAPI *ogGetAsyncKeyState)(int vKey) = GetAsyncKeyState;
     //Detection hooks
     inline static HHOOK(WINAPI *ogSetWindowsHookExA)(int idHook, HOOKPROC lpfn, HINSTANCE hmod, DWORD dwThreadId) = SetWindowsHookExA;
+    inline static HANDLE (WINAPI *ogCreateFileA)(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) = CreateFileA;
+    inline static HANDLE (WINAPI *ogCreateFileW)(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) = CreateFileW;
+    inline static VOID (WINAPI *ogGetSystemInfo)(LPSYSTEM_INFO lpSystemInfo) = GetSystemInfo;
+    
+    inline static BOOL (WINAPI *ogGetVersionExW)(LPOSVERSIONINFOW lpVersionInformation) = GetVersionExW;
     //Registry Hooks
     inline static LONG (WINAPI *ogRegSetValueExA)(HKEY hKey, LPCSTR lpValueName, DWORD Reserved, DWORD dwType, const BYTE *lpData, DWORD cbData) = RegSetValueExA;
     inline static LONG (WINAPI *ogRegDeleteKeyExA)(HKEY hKey, LPCSTR lpSubKey, REGSAM samDesired, DWORD Reserved) = RegDeleteKeyExA;

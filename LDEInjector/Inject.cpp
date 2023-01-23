@@ -126,8 +126,9 @@ BOOL Inject::injectToProcess(std::string exeLoc)
             return FALSE;
         }
         
+        std::cout << GREEN << "[+]" << RESET << "[LDEInjector]: Successfully injected into process! Will close in 8 seconds." << std::endl;
         //Wait a lil bit for initialization
-        Sleep(100);
+        Sleep(8000);
         // Resume the process.
         ResumeThread(pi.hThread);
 

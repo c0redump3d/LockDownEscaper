@@ -9,11 +9,12 @@
 */
 BOOL WINAPI ldeEnumProcesses(DWORD *lpidProcess, DWORD cb, DWORD *cbNeeded) {
     std::cout << "[f][win32][LDEscaper]: EnumProcesses called, will return a fake list of running processes." << std::endl;
+    ldeio.writeLog("EnumProcesses called, will return a fake list of running processes.", LOG_INFO);
     return NULL;
 }
 
 BOOL WINAPI ldeEnumProcessModules(HANDLE hProcess, HMODULE *lphModule, DWORD cb, LPDWORD lpcbNeeded) {
-    std::cout << "[f][win32][LDEscaper]: EnumProcessModules called, will return a fake list of running process modules." << std::endl;
+    ldeio.writeLog("EnumProcessModules called, will return a fake list of running process modules.", LOG_INFO);
     return NULL;
 }
 
@@ -24,7 +25,7 @@ BOOL WINAPI ldeEnumProcessModules(HANDLE hProcess, HMODULE *lphModule, DWORD cb,
 */
 
 VOID WINAPI ldeExitProcess(UINT uExitCode) {
-    std::cout << "[f][win32][LDEscaper]: ExitProcess called, but process will not close." << std::endl;
+    ldeio.writeLog("ExitProcess called, but process will not close.", LOG_INFO);
 }
 
 BOOL WINAPI ldeTerminateProcess(HANDLE hProcess, UINT uExitCode)
@@ -41,7 +42,7 @@ BOOL WINAPI ldeTerminateProcess(HANDLE hProcess, UINT uExitCode)
 
 BOOL WINAPI ldeEnumDisplayMonitors(HDC hdc, LPCRECT lprcClip, MONITORENUMPROC lpfnEnum, LPARAM dwData)
 {
-    std::cout << "[f][win32][LDEscaper]: EnumDisplayMonitors called, will return fake monitor specifications." << std::endl;
+    ldeio.writeLog("EnumDisplayMonitors called, will return fake monitor specifications.", LOG_INFO);
     MONITORINFO mi = { sizeof(1) };
     mi.rcMonitor.left = 0;
     mi.rcMonitor.top = 0;
@@ -75,36 +76,18 @@ BOOL WINAPI ldeIsDebuggerPresent()
 *
 */
 
-LRESULT CALLBACK ldeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    if (message == WM_SETFOCUS || message == WM_ACTIVATEAPP || message == 0x2B1)
-    {
-        std::cout << "[f][LDBdll][LDEscaper]: Blocked call to set focus." << std::endl;
-        return 0;
-    }
-
-    return CallWindowProc(originalWndProc, hWnd, message, wParam, lParam);
-}
-
 BOOL WINAPI ldeSetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags) {
     if (uFlags & SWP_NOZORDER) {
-         std::cout << "[f][win32][LDEscaper]: SetWindowPos called, TopMost flag disabled." << std::endl;
+        ldeio.writeLog("SetWindowPos called, TopMost flag disabled.", LOG_INFO);
          // Remove the topmost flag
          hWndInsertAfter = HWND_NOTOPMOST;
     }
     //Disable the ability to hide the taskbar.
     if (hWnd == FindWindowA("Shell_TrayWnd", NULL)) {
-        std::cout << "[f][win32][LDEscaper]: SetWindowPos called, ignoring call to hide taskbar." << std::endl;
+        ldeio.writeLog("SetWindowPos called, ignoring call to hide taskbar.", LOG_INFO);
         return TRUE;
     }
     return Win32Hook::ogSetWindowPos(hWnd, hWndInsertAfter, X, Y, cx, cy, uFlags);
-}
-
-// Function to check if a window belongs to a specific application
-BOOL IsWindowFromApp(HWND hwnd, DWORD app_pid) {
-    DWORD window_pid = 0;
-    GetWindowThreadProcessId(hwnd, &window_pid);
-    return window_pid == app_pid;
 }
 
 BOOL CALLBACK ldeEnumWindowsProc(HWND hwnd, LPARAM lParam) {
@@ -123,26 +106,26 @@ HWND WINAPI ldeGetForegroundWindow() {
     EnumWindows(ldeEnumWindowsProc, (LPARAM)&hParentWnd);
     CloseHandle(hProcess);
     
-    std::cout << "[f][win32][LDEscaper]: GetForegroundWindow called, will return parent process." << std::endl;
+    ldeio.writeLog("GetForegroundWindow called, will return parent process.", LOG_INFO);
     return hParentWnd;
 }
 
 HWND WINAPI ldeSetActiveWindow(HWND hWnd)
 {
-    std::cout<<"[f][win32][LDEscaper]: SetActiveWindow called, will return NULL." << std::endl;
+    ldeio.writeLog("SetActiveWindow called, will return NULL.", LOG_INFO);
     return NULL;
 }
 
 BOOL WINAPI ldeShowWindow(HWND hWnd, int nCmdShow) {
     // If the window is maximized, change it to normal
     if (nCmdShow == SW_SHOWMAXIMIZED) {
-        std::cout << "[f][win32][LDEscaper]: ShowWindow called, will return SW_SHOWNORMAL." << std::endl;
+        ldeio.writeLog("ShowWindow called, will return SW_SHOWNORMAL.", LOG_INFO);
         // Change to SW_SHOWNORMAL instead of minimizing the window
         nCmdShow = SW_SHOWNORMAL;
     }
     //Disable the ability to hide the taskbar.
     if (hWnd == FindWindowA("Shell_TrayWnd", NULL)) {
-        std::cout << "[f][win32][LDEscaper]: ShowWindow called, blocking request to hide taskbar." << std::endl;
+        ldeio.writeLog("ShowWindow called, blocking request to hide taskbar.", LOG_INFO);
         return TRUE;
     }
     
@@ -153,7 +136,7 @@ LONG WINAPI ldeSetWindowLongW(HWND hWnd, int nIndex, LONG dwNewLong) {
     if (nIndex == GWL_STYLE) {
         if (dwNewLong & WS_EX_TOPMOST) {
             dwNewLong &= ~WS_EX_TOPMOST; // remove the fullscreen flag
-            std::cout << "[f][win32][LDEscaper]: SetWindowLongW called, will remove TopMost flag." << std::endl;
+            ldeio.writeLog("SetWindowLongW called, will remove TopMost flag.", LOG_INFO);
         }
     }
     return Win32Hook::ogSetWindowLongW(hWnd, nIndex, dwNewLong);
@@ -167,10 +150,6 @@ LONG WINAPI ldeSetWindowLong(HWND hWnd, int nIndex, LONG dwNewLong) {
     return Win32Hook::ogSetWindowLong(hWnd, nIndex, dwNewLong);
 }
 
-HWND WINAPI ldeSetFocus(HWND hWnd) {
-    return NULL;
-}
-
 
 /*
  *
@@ -179,7 +158,7 @@ HWND WINAPI ldeSetFocus(HWND hWnd) {
  */
 SHORT WINAPI ldeGetAsyncKeyState(int vKey)
 {
-    std::cout << "[f][win32][LDEscaper]: GetAsyncKeyState called, will return 0." << std::endl;
+    ldeio.writeLog("GetAsyncKeyState called, will return NULL.", LOG_INFO);
     return NULL;
 }
 
@@ -190,9 +169,51 @@ SHORT WINAPI ldeGetAsyncKeyState(int vKey)
  */
 
 HHOOK WINAPI ldeSetWindowsHookExA(int idHook, HOOKPROC lpfn, HINSTANCE hmod, DWORD dwThreadId) {
-    std::cout << "[f][win32][LDEscaper]: SetWindowsHookExA called, will return NULL." << std::endl;
+    ldeio.writeLog("SetWindowsHookExA called, will return NULL.", LOG_INFO);
     // return NULL to prevent the application from setting any Windows hooks
     return NULL;
+}
+
+HANDLE WINAPI ldeCreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) {
+
+    if (dwShareMode == 0)
+    {
+        dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+        ldeio.writeLog("Intercepted Anti-Debug (CreateFileA); dwShareMode = 7.", LOG_WARNING);
+    }
+
+    return Win32Hook::ogCreateFileA(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+}
+
+HANDLE WINAPI ldeCreateFileW(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) {
+    
+    if (dwShareMode == 0)
+    {
+        dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+        ldeio.writeLog("Intercepted Anti-Debug (CreateFileW); dwShareMode = 7.", LOG_WARNING);
+    }
+
+    return Win32Hook::ogCreateFileW(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+}
+
+void WINAPI ldeGetSystemInfo(LPSYSTEM_INFO lpSystemInfo) {
+    lpSystemInfo->dwNumberOfProcessors = 1;
+    lpSystemInfo->dwActiveProcessorMask = 1;
+    lpSystemInfo->dwPageSize = 4096;
+    lpSystemInfo->lpMinimumApplicationAddress = (PVOID)0x10000;
+    lpSystemInfo->lpMaximumApplicationAddress = (PVOID)0x7FFFFFFF;
+    lpSystemInfo->dwProcessorType = PROCESSOR_INTEL_PENTIUM;
+    lpSystemInfo->dwAllocationGranularity = 0x10000;
+    lpSystemInfo->wProcessorLevel = 5;
+    lpSystemInfo->wProcessorRevision = 0;
+}
+
+BOOL WINAPI ldeGetVersionExW(LPOSVERSIONINFOW lpVersionInformation) {
+    lpVersionInformation->dwMajorVersion = 10;
+    lpVersionInformation->dwMinorVersion = 0;
+    lpVersionInformation->dwBuildNumber = 7601;
+    lpVersionInformation->dwPlatformId = VER_PLATFORM_WIN32_WINDOWS;
+    return TRUE;
 }
 
 /*
@@ -202,17 +223,17 @@ HHOOK WINAPI ldeSetWindowsHookExA(int idHook, HOOKPROC lpfn, HINSTANCE hmod, DWO
  */
 
 LONG WINAPI ldeRegSetValueExA(HKEY hKey, LPCSTR lpValueName, DWORD Reserved, DWORD dwType, const BYTE *lpData, DWORD cbData) {
-    std::cout << "[f][win32][LDEscaper]: RegSetValueExA called, will return ERROR_SUCCESS." << std::endl;
+    ldeio.writeLog("RegSetValueExA called(" + (std::string)lpValueName + "), will return ERROR_SUCCESS.", LOG_INFO);
     return ERROR_SUCCESS;
 }
 
 LONG WINAPI ldeRegDeleteKeyExA(HKEY hKey, LPCSTR lpSubKey, REGSAM samDesired, DWORD Reserved) {
-    std::cout << "[f][win32][LDEscaper]: RegDeleteKeyExA called, will return ERROR_SUCCESS." << std::endl;
+    ldeio.writeLog("RegDeleteKeyExA called(" + (std::string)lpSubKey + "), will return ERROR_SUCCESS.", LOG_WARNING);
     return ERROR_SUCCESS;
 }
 
 LONG WINAPI ldeRegDeleteValueA(HKEY hKey, LPCSTR lpValueName) {
-    std::cout << "[f][win32][LDEscaper]: RegDeleteValueA called, will return ERROR_SUCCESS." << std::endl;
+    ldeio.writeLog("RegDeleteValueA called(" + (std::string)lpValueName + "), will return ERROR_SUCCESS.", LOG_WARNING);
     return ERROR_SUCCESS;
 }
 
@@ -222,34 +243,9 @@ LONG WINAPI ldeRegDeleteValueA(HKEY hKey, LPCSTR lpValueName) {
 *
 */
 
-DWORD GetProcessIdByName(LPCTSTR processName)
-{
-    DWORD processId = 0;
-    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hSnapshot != INVALID_HANDLE_VALUE)
-    {
-        PROCESSENTRY32 processInfo;
-        processInfo.dwSize = sizeof(PROCESSENTRY32);
-        if (Process32First(hSnapshot, &processInfo))
-        {
-            do
-            {
-                if (_tcscmp(processInfo.szExeFile, processName) == 0)
-                {
-                    processId = processInfo.th32ProcessID;
-                    break;
-                }
-            } while (Process32Next(hSnapshot, &processInfo));
-        }
-        CloseHandle(hSnapshot);
-    }
-    return processId;
-}
-
-
 BOOL Win32Hook::attachHooks()
 {
-    std::cout << "[f][win32][LDEscaper]: Attaching to API hooks..." << std::endl;
+    ldeio.writeLog("Attaching to WIN32 API functions...", LOG_INJECTOR);
     DetourAttach(&reinterpret_cast<PVOID&>(ogEnumProcesses), ldeEnumProcesses);
     DetourAttach(&reinterpret_cast<PVOID&>(ogEnumProcessModules), ldeEnumProcessModules);
     DetourAttach(&reinterpret_cast<PVOID&>(ogExitProcess), ldeExitProcess);
@@ -268,18 +264,17 @@ BOOL Win32Hook::attachHooks()
     DetourAttach(&reinterpret_cast<PVOID&>(ogRegSetValueExA), ldeRegSetValueExA);
     DetourAttach(&reinterpret_cast<PVOID&>(ogRegDeleteKeyExA), ldeRegDeleteKeyExA);
     DetourAttach(&reinterpret_cast<PVOID&>(ogRegDeleteValueA), ldeRegDeleteValueA);
-    DetourAttach(&reinterpret_cast<PVOID&>(ogSetFocus), ldeSetFocus);
-
-    std::cout << "[f][win32][LDEscaper]: Finished attaching to API hooks!" << std::endl;
-    
-    // Enumerate all top-level windows and set the parent window as their parent
-    //DetourAttach(&reinterpret_cast<PVOID&>(ogWndProc), ldeWndproc);
+    DetourAttach(&reinterpret_cast<PVOID&>(ogCreateFileA), ldeCreateFileA);
+    DetourAttach(&reinterpret_cast<PVOID&>(ogCreateFileW), ldeCreateFileW);
+    DetourAttach(&reinterpret_cast<PVOID&>(ogGetSystemInfo), ldeGetSystemInfo);
+    DetourAttach(&reinterpret_cast<PVOID&>(ogGetVersionExW), ldeGetVersionExW);
+    ldeio.writeLog("Finished hooking WIN32 API functions!", LOG_SUCCESS);
     return TRUE;
 }
 
 BOOL Win32Hook::detachHooks()
 {
-    std::cout << "[f][win32][LDEscaper]: Detaching from API hooks..." << std::endl;
+    ldeio.writeLog("Detaching from WIN32 API functions...", LOG_INJECTOR);
     DetourDetach(&reinterpret_cast<PVOID&>(ogEnumProcesses), ldeEnumProcesses);
     DetourDetach(&reinterpret_cast<PVOID&>(ogEnumProcessModules), ldeEnumProcessModules);
     DetourDetach(&reinterpret_cast<PVOID&>(ogExitProcess), ldeExitProcess);
@@ -298,7 +293,9 @@ BOOL Win32Hook::detachHooks()
     DetourDetach(&reinterpret_cast<PVOID&>(ogRegSetValueExA), ldeRegSetValueExA);
     DetourDetach(&reinterpret_cast<PVOID&>(ogRegDeleteKeyExA), ldeRegDeleteKeyExA);
     DetourDetach(&reinterpret_cast<PVOID&>(ogRegDeleteValueA), ldeRegDeleteValueA);
-    DetourDetach(&reinterpret_cast<PVOID&>(ogSetFocus), ldeSetFocus);
-    //DetourDetach(&reinterpret_cast<PVOID&>(ogWndProc), ldeWndproc);
+    DetourDetach(&reinterpret_cast<PVOID&>(ogCreateFileA), ldeCreateFileA);
+    DetourDetach(&reinterpret_cast<PVOID&>(ogCreateFileW), ldeCreateFileW);
+    DetourDetach(&reinterpret_cast<PVOID&>(ogGetSystemInfo), ldeGetSystemInfo);
+    DetourDetach(&reinterpret_cast<PVOID&>(ogGetVersionExW), ldeGetVersionExW);
     return TRUE;
 }

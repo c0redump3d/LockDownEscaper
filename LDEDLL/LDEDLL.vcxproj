@@ -92,7 +92,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;CPPDYNAMICLIBRARYTEMPLATE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;CPPDYNAMICLIBRARYTEMPLATE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(_ZVcpkgCurrentInstalledDir)include;C:\Dev\Detours\include;D:\Applications\Application Data\Windows SDK\10\Include\10.0.22621.0\km;D:\Applications\Application Data\Windows SDK\10\Include\10.0.22621.0\um;D:\Applications\Application Data\Windows SDK\10\Include\10.0.22621.0\shared;C:\Dev\MinHook\include</AdditionalIncludeDirectories>
@@ -244,6 +244,7 @@
     <ClInclude Include="Hooks\LDBHook.h" />
     <ClInclude Include="Hooks\Win32Hook.h" />
     <ClInclude Include="LDEIO.h" />
+    <ClInclude Include="Util\Colors.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

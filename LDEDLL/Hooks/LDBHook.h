@@ -1,9 +1,11 @@
 ﻿#pragma once
-#include "../Globals.h"
 #include "MinHook.h"
 #include <winternl.h>
+#include "../Globals.h"
 
 #define LD_OFFSET(offset) ((char*) GetModuleHandle(NULL) + (offset))
+
+static LDEIO ldeio;
 
     // TYPEDEFS ----------------------------------------------
     typedef int (*cldb_do_some_stuff_t)(int*);
@@ -31,8 +33,6 @@
     extern nt_query_system_information_t og_nt_query_system_information;
     extern get_monitor_info_t og_get_monitor_info;
     extern lockdown_check_vm_t og_check_vm;
-
-    static inline WNDPROC originalWndProc;
     
     class LDBHook
     {

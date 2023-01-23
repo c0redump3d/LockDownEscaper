@@ -13,6 +13,7 @@ check_foreground_window_t og_check_foreground_window = nullptr;
 nt_query_system_information_t og_nt_query_system_information = nullptr;
 get_monitor_info_t og_get_monitor_info = nullptr;
 lockdown_check_vm_t og_check_vm = nullptr;
+WNDPROC ogWndProc = nullptr;
 
 NTSTATUS WINAPI nt_query_system_information(SYSTEM_INFORMATION_CLASS SystemInformationClass,
                                                        PVOID SystemInformation, ULONG SystemInformationLength,
@@ -44,7 +45,7 @@ NTSTATUS WINAPI nt_query_system_information(SYSTEM_INFORMATION_CLASS SystemInfor
 
 extern int _cdecl ldeDoSomeStuff(int* a1)
 {
-    std::cout << "[f][LDBdll][LDEscaper]: CLDBDoSomeStuff has been called!" << std::endl;
+    ldeio.writeLog("CLDBDoSomeStuff has been called!", LOG_WARNING);
     if (*a1 >> 6 & 1)
     {
         // todo check if this actually matters
@@ -60,7 +61,7 @@ extern int _cdecl ldeDoSomeStuff(int* a1)
 
 extern bool _cdecl ldeDoSomeOtherStuff(int* a1)
 {
-    std::cout << "[f][LDBdll][LDEscaper]: CLDBDoSomeOtherStuff has been called!" << std::endl;
+    ldeio.writeLog("CLDBDoSomeOtherStuff has been called!", LOG_WARNING);
     // todo check if this actually matters
     *a1 += 2048;
     return TRUE;
@@ -68,7 +69,7 @@ extern bool _cdecl ldeDoSomeOtherStuff(int* a1)
 
 extern bool _cdecl ldeDoYetMoreStuff()
 {
-    std::cout << "[f][LDBdll][LDEscaper]: CLDBDoYetMoreStuff has been called!" << std::endl;
+    ldeio.writeLog("CLDBDoYetMoreStuff has been called!", LOG_WARNING);
     return TRUE;
 }
 
@@ -132,33 +133,44 @@ int ldeCheckVM()
     return FALSE;
 }
 
+LRESULT WINAPI ldeWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg == WM_SETFOCUS || uMsg == WM_ACTIVATEAPP || uMsg == 0x2B1)
+    {
+        ldeio.writeLog("Blocked call to set focus.", LOG_WARNING);
+        return 0;
+    }
+    return ogWndProc(hWnd, uMsg, wParam, lParam);
+}
+
 BOOL LDBHook::attachHooks()
 {
-    std::cout << "[f][LDBdll][LDEscaper]: Attaching to API hooks..." << std::endl;
+    ldeio.writeLog("Attaching to LDB functions...", LOG_INJECTOR);
+    
     DetourAttach(&reinterpret_cast<PVOID&>(og_do_some_stuff), ldeDoSomeStuff);
     DetourAttach(&reinterpret_cast<PVOID&>(og_do_some_other_stuff), ldeDoSomeOtherStuff);
     DetourAttach(&reinterpret_cast<PVOID&>(og_do_yet_more_stuff), ldeDoYetMoreStuff);
     DetourAttach(&reinterpret_cast<PVOID&>(og_do_some_other_stuff_s), ldeDoSomeOtherStuffS);
-    //DetourAttach(&reinterpret_cast<PVOID&>(og_check_vm), ldeCheckVM);
-    //DetourAttach(&reinterpret_cast<PVOID&>(og_disable_task_manager), ldeDisableTaskManager);
-    std::cout << "[f][LDBdll][LDEscaper]: Done! Hooking ntdll to grab NtQuerySystemInformation..." << std::endl;
+    
+    ldeio.writeLog("Finished hooking LDB functions!", LOG_SUCCESS);
+    
+    ldeio.writeLog("Attaching to ntdll to hook NtQuerySystemInformation...", LOG_INJECTOR);
+    
     og_nt_query_system_information = reinterpret_cast<nt_query_system_information_t>(GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtQuerySystemInformation"));
     if(og_nt_query_system_information != nullptr)
     {
         DetourAttach(&reinterpret_cast<PVOID&>(og_nt_query_system_information), nt_query_system_information);
-        std::cout << "[f][LDBdll][LDEscaper]: Successfully hooked NtQuerySystemInformation!" << std::endl;
+        ldeio.writeLog("Successfully hooked NtQuerySystemInformation!", LOG_SUCCESS);
         return TRUE;
     }
-    std::cout << "[f][LDBdll][LDEscaper]: Failed to hook NtQuerySystemInformation!" << std::endl;
-    //DetourAttach(&reinterpret_cast<PVOID&>(og_wnd_proc), ldeWindProc);
-    //DetourAttach(&reinterpret_cast<PVOID&>(og_lockdown_log), ldeLockdownLog);
-    //DetourAttach(&reinterpret_cast<PVOID&>(og_check_foreground_window), ldeCheckForegroundWindow);
+    
+    ldeio.writeLog("Failed to hook NtQuerySystemInformation!", LOG_ERROR);
     return FALSE;
 }
 
 BOOL LDBHook::detachHooks()
 {
-    std::cout << "[f][LDBdll][LDEscaper]: Detaching to API hooks..." << std::endl;
+    ldeio.writeLog("Detaching LDB hooks...", LOG_INJECTOR);
     DetourDetach(&reinterpret_cast<PVOID&>(og_do_some_stuff), ldeDoSomeStuff);
     DetourDetach(&reinterpret_cast<PVOID&>(og_do_some_other_stuff), ldeDoSomeOtherStuff);
     DetourDetach(&reinterpret_cast<PVOID&>(og_do_yet_more_stuff), ldeDoYetMoreStuff);
@@ -174,33 +186,33 @@ BOOL LDBHook::detachHooks()
 
 BOOL LDBHook::init()
 {
-    std::cout << "[f][LDBdll][LDEscaper]: Initializing LDBHook..." << std::endl;
+    ldeio.writeLog("Initializing LDBHook...", LOG_INJECTOR);
     //Make sure MinHook is initialized.
     if(MH_CreateHookApi(L"LockDownBrowser.dll", "?CLDBDoSomeStuff@@YAHPAH@Z", &ldeDoSomeStuff, (void**)&og_do_some_stuff) != MH_OK)
     {
-        std::cout << "[f][LDBdll][LDEscaper]: Failed to hook CLDBDoSomeStuff!" << std::endl;
+        ldeio.writeLog("Failed to hook CLDBDoSomeStuff!", LOG_ERROR);
         return FALSE;
     }
     if(MH_CreateHookApi(L"LockDownBrowser.dll", "?CLDBDoSomeOtherStuff@@YAHPAH@Z", &ldeDoSomeOtherStuff, (void**)&og_do_some_other_stuff) != MH_OK)
     {
-        std::cout << "[f][LDBdll][LDEscaper]: Failed to hook CLDBDoSomeOtherStuff!" << std::endl;
+        ldeio.writeLog("Failed to hook CLDBDoSomeOtherStuff!", LOG_ERROR);
         return FALSE;
     }
     if(MH_CreateHookApi(L"LockDownBrowser.dll", "?CLDBDoYetMoreStuff@@YAHPAH@Z", &ldeDoYetMoreStuff, (void**)&og_do_yet_more_stuff) != MH_OK)
     {
-        std::cout << "[f][LDBdll][LDEscaper]: Failed to hook CLDBDoYetMoreStuff!" << std::endl;
+        ldeio.writeLog("Failed to hook CLDBDoYetMoreStuff!", LOG_ERROR);
         return FALSE;
     }
     if(MH_CreateHookApi(L"LockDownBrowser.dll", "?CLDBDoSomeOtherStuffs@@YAHPAH@Z", &ldeDoSomeOtherStuffS, (void**)&og_do_some_other_stuff_s) != MH_OK)
     {
-        std::cout << "[f][LDBdll][LDEscaper]: Failed to hook CLDBDoSomeOtherStuffs!" << std::endl;
+        ldeio.writeLog("Failed to hook CLDBDoSomeOtherStuffs!", LOG_ERROR);
         return FALSE;
     }
-
+    
     //Very important to enable the hooks.
     MH_EnableHook(MH_ALL_HOOKS);
     
-    std::cout << "[f][LDBdll][LDEscaper]: LockDownBrowser.dll successfully hooked!" << std::endl;
+    ldeio.writeLog("LockDownBrowser.dll successfully hooked!", LOG_SUCCESS);
     
     return TRUE;
 }
