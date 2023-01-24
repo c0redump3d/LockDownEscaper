@@ -5,6 +5,8 @@
 #include <WinUser.h>
 #include <tchar.h>
 #pragma warning (disable : 4996)
+
+
 class Win32Hook
 {
 

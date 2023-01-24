@@ -16,10 +16,16 @@
  *  Created by Carson Kelley - 1/2023 - FOR EDUCATIONAL USE ONLY
  *                                                                     
 */
+
 HKEY hKey;
 const char* fakeBios = "ALASKA - 1072007\r\n1.30\r\nAmerican Megatrends - 50011";
-const char* originalBios;
-DWORD originalBiosSize;
+const char* fakeBiosVersion = "1.30";
+const char* fakeVendor = "American Megatrends Inc.";
+const char* fakeProduct = "MS-7A34";
+const char* fakeSystemManufacturer = "Micro-Star International Co., Ltd.";
+
+const char* originalBios, *originalBiosName, *originalSystemManufacturer, *originalSystemProductName, *originalBiosVersion;
+DWORD originalBiosSize, originalBiosNameSize, originalSystemManufacturerSize, originalSystemProductNameSize, originalBiosVersionSize;
 
 int main(int argc, char* argv[])
 {
@@ -81,17 +87,43 @@ int main(int argc, char* argv[])
             if(onVM)
             {
                 if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System", 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS) {
+                    //Set SystemBiosVersion to a fake one.
                     RegGetValueA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System", "SystemBiosVersion", RRF_RT_REG_MULTI_SZ, NULL, NULL, &originalBiosSize);
                     originalBios = (char*)malloc(originalBiosSize);
-                    // Get the current value
                     RegGetValueA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System", "SystemBiosVersion", RRF_RT_REG_MULTI_SZ, NULL, (PVOID)originalBios, &originalBiosSize);
-                    // Set the new value
                     RegSetValueExA(hKey, "SystemBiosVersion", 0, REG_MULTI_SZ, (const BYTE*)fakeBios, strlen(fakeBios));
+                    originalBiosSize = NULL;
                     // Close the key
                     RegCloseKey(hKey);
-                }else
+                }
+                if(RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
                 {
-                    MessageBoxA(NULL, "Failed to open registry key.", "LDE Error", MB_OK | MB_ICONERROR);
+                    //Set SystemManufacturer to a fake one.
+                    RegGetValueA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "BIOSVendor", REG_SZ, NULL, NULL, &originalBiosNameSize);
+                    originalBiosName = (char*)malloc(originalBiosNameSize);
+                    RegGetValueA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "BIOSVendor", REG_SZ, NULL, (PVOID)originalBiosName, &originalBiosNameSize);
+                    RegSetValueExA(hKey, "BIOSVendor", 0, REG_SZ, (const BYTE*)fakeVendor, strlen(fakeVendor));
+
+                    //Set BiosVersion to a fake one.
+                    RegGetValueA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "BIOSVersion", REG_SZ, NULL, NULL, &originalBiosVersionSize);
+                    originalBiosVersion = (char*)malloc(originalBiosVersionSize);
+                    RegGetValueA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "BIOSVersion", REG_SZ, NULL, (PVOID)originalBiosVersion, &originalBiosVersionSize);
+                    RegSetValueExA(hKey, "BIOSVersion", 0, REG_SZ, (const BYTE*)fakeBiosVersion, strlen(fakeBiosVersion));
+                    
+                    //Set SystemManufacturer to a fake one.
+                    RegGetValueA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemManufacturer", REG_SZ, NULL, NULL, &originalSystemManufacturerSize);
+                    originalSystemManufacturer = (char*)malloc(originalSystemManufacturerSize);
+                    RegGetValueA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemManufacturer", REG_SZ, NULL, (PVOID)originalSystemManufacturer, &originalSystemManufacturerSize);
+                    RegSetValueExA(hKey, "SystemManufacturer", 0, REG_SZ, (const BYTE*)fakeSystemManufacturer, strlen(fakeSystemManufacturer));
+
+                    //Set SystemProductName to a fake one.
+                    RegGetValueA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemProductName", REG_SZ, NULL, NULL, &originalSystemProductNameSize);
+                    originalSystemProductName = (char*)malloc(originalSystemProductNameSize);
+                    RegGetValueA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemProductName", REG_SZ, NULL, (PVOID)originalSystemProductName, &originalSystemProductNameSize);
+                    RegSetValueExA(hKey, "SystemProductName", 0, REG_SZ, (const BYTE*)fakeProduct, strlen(fakeProduct));
+
+                    // Close the key
+                    RegCloseKey(hKey);
                 }
             }
             
@@ -118,7 +150,17 @@ int main(int argc, char* argv[])
     if(onVM)
     {
         if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System", 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS) {
-            RegSetValueExA(hKey, "SystemBiosVersion", 0, REG_MULTI_SZ, (const BYTE*)originalBios, originalBiosSize);        // Close the key
+            RegSetValueExA(hKey, "SystemBiosVersion", 0, REG_MULTI_SZ, (const BYTE*)originalBios, strlen(originalBios));
+            // Close the key
+            RegCloseKey(hKey);
+        }
+        if(RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
+        {
+            RegSetValueExA(hKey, "BIOSVendor", 0, REG_SZ, (const BYTE*)originalBiosName, strlen(originalBiosName));
+            RegSetValueExA(hKey, "SystemManufacturer", 0, REG_SZ, (const BYTE*)originalSystemManufacturer, strlen(originalSystemManufacturer));
+            RegSetValueExA(hKey, "SystemProductName", 0, REG_SZ, (const BYTE*)originalSystemProductName, strlen(originalSystemProductName));
+            RegSetValueExA(hKey, "BIOSVersion", 0, REG_SZ, (const BYTE*)originalBiosVersion, strlen(originalBiosVersion));
+            // Close the key
             RegCloseKey(hKey);
         }
     }
