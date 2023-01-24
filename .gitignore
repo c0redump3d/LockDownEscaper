@@ -1,6 +1,7 @@
 bin/
 obj/
 Debug/
+Release/
 .idea/
 LockDownEscaper.sln.DotSettings.user
 /packages/
