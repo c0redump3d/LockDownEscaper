@@ -2,6 +2,8 @@
 __A LockDown Browser Bypass__
 
 ## Notice
+This no longer supports the latest version of LDB as of April 2023. This project is now archived and no longer being maintained.
+
 This application is to be used for educational purposes only.
 
 I, Carson Kelley, am not responsible for any damages that running this application may cause.
